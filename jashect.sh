@@ -1,4 +1,10 @@
 #!/bin/bash
+# Just Another Simplified Hurricane Electric Certification Tool
+# Usage: $0 username password
+
+HOST="ipv6.he.net"
+IPADDR=`dig AAAA +short ipv6.he.net`
+PING6=`type ping6 2> /dev/null && echo "ping6" || echo "ping -6"`
 
 PAGES_TITLE=(
   "traceroute"
@@ -7,11 +13,11 @@ PAGES_TITLE=(
   "ping"
   "whois")
 PAGES_ACTION=(
-  "traceroute -6 ipv6.he.net"
-  "dig AAAA ipv6.he.net"
-  "dig -x 2001:470:0:64::2"
-  "ping -6 -c3 ipv6.he.net"
-  "whois 2001:470:0:64::2")
+  "traceroute -6 $HOST"
+  "dig AAAA $HOST"
+  "dig -x $IPADDR"
+  "$PING6 -c3 $IPADDR"
+  "whois $IPADDR")
 PAGES_FILES=()
 COOKIE_FILE=`mktemp`
 
@@ -32,6 +38,7 @@ function heLogin {
 
   if echo $resp | grep --quiet "errorMessageBox"; then
     >&2 echo "Login for $1 failed!"
+    cleanUp
     exit 1
   fi
 }
@@ -44,8 +51,15 @@ function hePost {
        "https://ipv6.he.net/certification/daily.php?test=$1" > /dev/null
 }
 
+function cleanUp {
+  rm $COOKIE_FILE
+  for f in "${PAGES_FILES[@]}"; do
+    rm $f
+  done
+}
 
-[ "$#" != "2" ] && echo "Usage: $0 username password" && exit 1
+
+[ "$#" != "2" ] && >&2 echo "Usage: $0 username password" && exit 1
 
 heLogin "$1" "$2"
 invokeAction
@@ -53,3 +67,5 @@ invokeAction
 for (( i=0; i<${#PAGES_TITLE[@]}; i++ )); do
   hePost ${PAGES_TITLE[i]} ${PAGES_FILES[i]}
 done
+
+cleanUp

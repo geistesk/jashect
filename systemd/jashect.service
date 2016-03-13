@@ -1,0 +1,9 @@
+[Unit]
+Description=Just Another Simplified Hurricane Electric Certification Tool
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/jashect "$USER" "$PASS"
+
+[Install]
+WantedBy=multi-user.target

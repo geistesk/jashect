@@ -1,0 +1,10 @@
+[Unit]
+Description=Invokes JASHECT daily
+
+[Timer]
+OnBootSec=10min
+OnUnitInactiveSec=24h 2min
+Unit=jashect.service
+
+[Install]
+WantedBy=timers.target
