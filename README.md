@@ -1,10 +1,10 @@
 # jashect
-**Just Another Simplified Hurricane Electric Certification Tool**
+**Just Another Simplified Hurricane Electric Certification Tool** to pass the *daily tests* for your *HE.net IPv6 Certification*
 
 ## What?
 Some people aren't happy enough with being a sage and are always dreaming about reaching the 1.5k points… but are just too lazy to submit a report every day.
 
-What am I talking about? The glorious [IPv6 Certification](https://ipv6.he.net/certification/) where you have to fill some stats for 100 days to count yourself as one of the best. And exactly this does this tiny script for you.
+What am I talking about? The glorious [IPv6 Certification](https://ipv6.he.net/certification/) where you have to fill daily tests 100 times to count yourself as one of the best. And exactly there is this tiny script for.
 
 This software was inspired by [HECT](https://github.com/tactmaster/HECT).
 
