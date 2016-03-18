@@ -4,10 +4,10 @@
 
 SIXY_FEED=`curl -s http://sixy.ch/feed`
 HOST=`echo "$SIXY_FEED"| \
-  sed -n 's/\([ ]*\)<id>http:\/\/sixy.ch\/go\/\(.*\)<\/id>/\2/p' | \
+  sed -n 's/\([ ]*\)<id>http:\/\/sixy.ch\/go\/\([[:alnum:].-]*\)<\/id>/\2/p' | \
   sort -R | head -n 1`
 IPADDR=`echo "$SIXY_FEED" | \
-  sed -n 's/IPv6 address: \(.*\)<\/summary>/\1/p' | \
+  sed -n 's/IPv6 address: \([[:xdigit:]:]*\)<\/summary>/\1/p' | \
   sort -R | head -n 1`
 PING6=`type ping6 2> /dev/null && echo "ping6" || echo "ping -6"`
 
