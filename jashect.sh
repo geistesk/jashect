@@ -2,8 +2,13 @@
 # Just Another Simplified Hurricane Electric Certification Tool
 # Usage: $0 username password
 
-HOST="ipv6.he.net"
-IPADDR=`dig AAAA +short ipv6.he.net`
+SIXY_FEED=`curl -s http://sixy.ch/feed`
+HOST=`echo "$SIXY_FEED"| \
+  sed -n 's/\([ ]*\)<id>http:\/\/sixy.ch\/go\/\(.*\)<\/id>/\2/p' | \
+  sort -R | head -n 1`
+IPADDR=`echo "$SIXY_FEED" | \
+  sed -n 's/IPv6 address: \(.*\)<\/summary>/\1/p' | \
+  sort -R | head -n 1`
 PING6=`type ping6 2> /dev/null && echo "ping6" || echo "ping -6"`
 
 PAGES_TITLE=(
@@ -45,10 +50,19 @@ function heLogin {
 
 # $1: Testname, $2: Resultfile
 function hePost {
-  curl --silent \
-       --cookie $COOKIE_FILE --cookie-jar $COOKIE_FILE \
-       --data-urlencode "input@$2" \
-       "https://ipv6.he.net/certification/daily.php?test=$1" > /dev/null
+  local resp=`curl --silent \
+              --cookie $COOKIE_FILE --cookie-jar $COOKIE_FILE \
+              --data-urlencode "input@$2" \
+              --location \
+              "https://ipv6.he.net/certification/daily.php?test=$1"`
+
+  if echo $resp | grep --quiet "errorMessageBox"; then
+    local err_msg=`echo "$resp" | \
+      sed -n 's/<div class=\"errorMessageBox\">\(.*\)<\/div>/\1/p'`
+    >&2 echo "Posting $1 failed: $err_msg"
+  else
+    echo "Posting $1 succeeded"
+  fi
 }
 
 function cleanUp {
