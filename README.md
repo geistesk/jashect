@@ -33,15 +33,13 @@ If you're running a GNU/Linux with systemd I wrote the services for you.
 Now modify the content of `/usr/lib/systemd/system/jashect.service.d/local.conf`
 
 ```bash
-systemctl daemon-reload
-systemctl start jashect.timer
-systemctl enable jashect.timer
+# systemctl daemon-reload
+# systemctl start jashect.timer
+# systemctl enable jashect.timer
 ```
 
 There you go! You don't have to worry for the next 100 days. Maybe you want to disable the script after reaching 1.5k points because it has no brakes…
 
 ### everything else
-You could write a daily cronjob but it may fail because sometimes the script takes 5secs and sometimes 10secs. So you won't wait exactly 24 hours and your submission was rejected..
-
-Another *genial* idea is already written in the `yolo.sh` (*You Only Loop Once*) which exactly does what its name says: It loops n times and sleeps one day between every iteration :^)
+You could write a daily cronjob but it may fail because sometimes the script takes 5secs and sometimes 10secs. So you won't wait exactly 24 hours and your submission was rejected.. So perhaps it's a good idea to write two cronjobs separated for 12h or something like that.
 
