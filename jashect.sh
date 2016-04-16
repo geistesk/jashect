@@ -4,7 +4,7 @@
 
 HOST=""
 IPADDR=""
-PING6=`type ping6 2> /dev/null && echo "ping6" || echo "ping -6"`
+PING6=`type ping6 &> /dev/null && echo "ping6" || echo "ping -6"`
 PAGES_TITLE=(
   "traceroute"
   "aaaa"
@@ -18,14 +18,14 @@ PAGES_ACTION=(
   "$PING6 -c3 <IPADDR>"
   "whois <IPADDR>")
 COOKIE_FILE=`mktemp`
-FAIL_RETRY=3
+FAIL_RETRY=6
 
 function getTargets {
-  local sisy_feed=`curl -s http://sixy.ch/feed`
-  HOST=`echo "$sisy_feed" \
+  local sixy_feed=`curl -s http://sixy.ch/feed`
+  HOST=`echo "$sixy_feed" \
   | sed -n 's/\([ ]*\)<id>http:\/\/sixy.ch\/go\/\([[:alnum:].-]*\)<\/id>/\2/p' \
   | sort -R -u`
-  IPADDR=`echo "$sisy_feed" \
+  IPADDR=`echo "$sixy_feed" \
   | sed -n 's/IPv6 address: \([[:xdigit:]:]*\)<\/summary>/\1/p' \
   | sort -R -u`
 
@@ -33,14 +33,14 @@ function getTargets {
   local ipaddr_lines=`echo "$IPADDR" | wc -l`
   if (( "$host_lines" <= "1" )) || (( "$ipaddr_lines" <= "1" )); then
     echo "Could not fetch IPs and hostnames from sixy.ch"
-    rm $COOKIE_FILE
+    cleanUp
     exit 1
   fi
 }
 
 # $1: No of HOST/IPADDR
-function getHost()   { echo "$HOST"   | head -n $1 | tail -n 1; }
-function getIPAddr() { echo "$IPADDR" | head -n $1 | tail -n 1; }
+function getHost   { echo "$HOST"   | head -n $1 | tail -n 1; }
+function getIPAddr { echo "$IPADDR" | head -n $1 | tail -n 1; }
 
 # $1: PAGES_*-ID, $2: No of HOST/IPADDR
 function invokeAction {
@@ -55,20 +55,25 @@ function invokeAction {
 }
 
 # $1: PAGES_*-ID
-function postPage() {
-  for (( j=1; j<=$FAIL_RETRY; j++)); do
-    echo "Invoking ${PAGES_TITLE[$1]} for the $j. time.."
+function postPage {
+  echo "Solving ${PAGES_TITLE[$1]}.."
+
+  local j=1
+  for (( ; j<=$FAIL_RETRY; j++)); do
+    echo "|> Invoking ${PAGES_TITLE[$1]} for the $j. time.."
 
     local tmp_file=`invokeAction $1 $j`
     local he_resp=`hePost ${PAGES_TITLE[$1]} $tmp_file`
     rm $tmp_file
 
-    echo "$he_resp"
+    echo "|  $he_resp"
     if echo "$he_resp" | grep --quiet "succeeded"; then
+      echo "Finished ${PAGES_TITLE[$1]}"
       break
     fi
   done
-  echo "Finished trying ${PAGES_TITLE[$1]}"
+
+  [ "$j" = $((FAIL_RETRY+1)) ] && echo "Failed to ${PAGES_TITLE[$1]}!"
 }
 
 # $1: Username, $2: Password
@@ -80,7 +85,7 @@ function heLogin {
 
   if echo $resp | grep --quiet "errorMessageBox"; then
     echo "Login for $1 failed!"
-    rm $COOKIE_FILE
+    cleanUp
     exit 1
   else
     echo "Login for $1 succeeded"
@@ -104,6 +109,8 @@ function hePost {
   fi
 }
 
+function cleanUp { rm $COOKIE_FILE; }
+
 
 [ "$#" != "2" ] && echo "Usage: $0 username password" && exit 1
 
@@ -111,7 +118,7 @@ heLogin "$1" "$2"
 getTargets
 
 for (( i=0; i<${#PAGES_TITLE[@]}; i++ )); do
-  postPage $i #&
+  postPage $i
 done
 
-rm $COOKIE_FILE
+cleanUp
